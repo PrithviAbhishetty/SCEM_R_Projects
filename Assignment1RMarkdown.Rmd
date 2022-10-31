@@ -1,0 +1,21 @@
+---
+title: "Assignment1RMarkdown"
+author: "Prithvi Abhishetty"
+date: "2022-10-31"
+output: html_document
+---
+
+# Wave plot
+
+```{r}
+x <- seq(0,20,0.01)
+y <- c(sin(x))
+sin_df <- data.frame(x,y)
+head(sin_df,3)
+```
+```{r}
+plot(sin_df)
+```
+\[
+\sin(x)^{2}+cos(x)^{2}=1
+\]
