@@ -1,0 +1,270 @@
+---
+title: "Assignment3RMarkdown"
+author: "Prithvi Abhishetty"
+date: "2022-11-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+library(Stat2Data)
+data("Hawks")
+```
+
+# 1. Exploratory data analysis
+
+
+## 1.1 (Q1)   
+
+```{r}
+head(Hawks)
+HawksTail = Hawks$Tail
+head(HawksTail)
+mean(HawksTail,na.rm = TRUE)
+median(HawksTail,na.rm = TRUE)
+```
+
+## 1.2 (Q1)
+
+```{r}
+summarise(Hawks, Wing_mean=mean(Wing, na.rm=TRUE), Wing_t_mean=mean(Wing, trim=0.5, na.rm=TRUE),
+Wing_med=median(Wing, na.rm=TRUE), Weight_mean=mean(Weight, na.rm=TRUE),
+Weight_t_mean=mean(Weight, trim=0.5, na.rm=TRUE), Weight_med=median(Weight, na.rm=TRUE))
+```
+
+
+## 1.2 (Q2)
+
+```{r}
+group_by(Hawks, Species) %>%
+summarise(Wing_mean=mean(Wing, na.rm=TRUE), Wing_t_mean=mean(Wing, trim=0.5, na.rm=TRUE),
+Wing_med=median(Wing, na.rm=TRUE), Weight_mean=mean(Weight, na.rm=TRUE),
+Weight_t_mean=mean(Weight, trim=0.5, na.rm=TRUE), Weight_med=median(Weight, na.rm=TRUE))
+```
+## 1.3 (Q1)
+
+mean = a*A+b
+```{r}
+mean(HawksTail)*2+3
+mean(HawksTail*2+3)
+```
+## 1.3 (Q2)
+
+variance = aap
+standard deviation = aq
+```{r}
+var(2*HawksTail+3, na.rm = TRUE)
+2*2*var(HawksTail)
+
+sd(2*HawksTail+3, na.rm = TRUE)
+2*sd(HawksTail)
+```
+## 1.4 (Q1)
+
+```{r}
+hal<-Hawks$Hallux # Extract the vector of hallux lengths
+hal<-hal[!is.na(hal)] # Remove any nans
+outlier_val<-100
+num_outliers<-10
+corrupted_hal<-c(hal,rep(outlier_val,times=num_outliers))
+
+mean(hal)
+mean(corrupted_hal)
+
+num_outliers_vect <- seq(0,1000)
+means_vect <- c()
+for(num_outliers in num_outliers_vect){
+corrupted_hal <- c(hal,rep(outlier_val,times=num_outliers))
+means_vect <- c(means_vect, mean(corrupted_hal))
+}
+head(means_vect)
+```
+
+```{r}
+num_outliers_vect <- seq(0,1000)
+medians_vect <- c()
+for(num_outliers in num_outliers_vect){
+corrupted_hal <- c(hal,rep(outlier_val,times=num_outliers))
+medians_vect <- c(medians_vect, median(corrupted_hal))
+}
+head(medians_vect)
+```
+
+## 1.4 (Q2)
+
+```{r}
+num_outliers_vect <- seq(0,1000)
+t_means_vect <- c()
+for(num_outliers in num_outliers_vect){
+corrupted_hal <- c(hal,rep(outlier_val,times=num_outliers))
+t_means_vect <- c(t_means_vect, mean(corrupted_hal,trim = 0.1))
+}
+head(t_means_vect)
+```
+
+## 1.4 (Q3)
+
+```{r}
+df_means_medians <- data.frame(num_outliers=num_outliers_vect, mean=means_vect,
+t_mean=t_means_vect, median=medians_vect)
+head(df_means_medians)
+
+df_means_medians %>%
+pivot_longer(!num_outliers, names_to = "Estimator", values_to = "Value") %>%
+ggplot(aes(x=num_outliers,color=Estimator, linetype=Estimator,y=Value)) +
+geom_line()+xlab("Number of outliers")
+```
+the sample median is the most robust when the outliers are small.
+
+## 1.5 (Q1)
+
+```{r}
+ggplot(data=Hawks, aes(x=Species, y=Weight))+geom_boxplot()+xlab('Species')+ylab("Weight")
+```
+
+## 1.5 (Q2)
+
+```{r}
+Hawks %>% 
+  group_by(Species) %>% 
+  summarise(quantile025=quantile(Weight, prob=0.25, na.rm = TRUE), quantile050=quantile(Weight, probs=0.5, na.rm=TRUE), quantile075=quantile(Weight, probs=0.75, na.rm=TRUE))
+```
+
+## 1.5 (Q3)
+
+```{r}
+num_outliers <- function(x){
+  q25 <- x %>% quantile(0.25, na.rm = TRUE)
+  q75 <- x %>% quantile(0.75, na.rm = TRUE)
+  iq_range <- q75 - q25
+  outliers <- sum((x > q75+1.5*iq_range)|(x < q25-1.5*iq_range), na.rm = TRUE)
+  return (outliers)
+}
+num_outliers(c(0, 40, 60, 185 ))
+```
+
+## 1.5 (Q4)
+
+```{r}
+Hawks %>% group_by(Species) %>% summarise(num_outliers_weight=num_outliers(Weight))
+```
+
+## 1.6 (Q1)
+
+```{r}
+cov(Hawks$Weight,Hawks$Wing,use = 'complete.obs')
+cor(Hawks$Weight,Hawks$Wing,use = 'complete.obs')
+```
+
+
+## 1.6 (Q2)
+
+covariance = acS
+correlation = sign(ac)R (not sure why)
+```{r}
+2.4*-1*cov(Hawks$Weight,Hawks$Wing,use = 'complete.obs')
+cov(Hawks$Weight*2.4+7.1, Hawks$Wing*(-1)+3,use = 'complete.obs')
+
+sign(2.4*-1)*cor(Hawks$Weight,Hawks$Wing,use = 'complete.obs')
+cor(Hawks$Weight*2.4+7.1, Hawks$Wing*(-1)+3,use = 'complete.obs')
+
+```
+
+
+# 2. Random experiments, events and sample spaces, and the set theory
+
+## 2.1 (Q1)
+Random Experiment: has a well-defined set of possible outcomes. Could be repeated arbitrarily many times.
+Event: A set of possible outcomes of an experiment
+Sample Space: The set of all possible outcomes of interest for a random experiment
+
+## 2.2 (Q2)
+
+Event example: {(1,2),(2,3)}
+Sample space: {(a,b) | a,b ∈ {1,2,3,4,5,6}}
+Total number of different events: 36 possible outcomes so 2^(36) different events.
+The empty set is an event.
+
+## 2.2 (Q1)
+
+1. {1,2,3,4,6}, {1,2,3,4,5,6}
+2. {2}, {∅}
+3. {1,3}, {1,2,3}
+4. No, Yes
+5. Yes
+6. {1,2},{3,4,5,6}; {1},{2},{3,4,5,6}
+
+## 2.2 (Q2)
+
+1. A
+2. {∅}
+3. if A ⊆ B, then A<B. (B^c = 1-B) < (1-A = A^c) therefore B^c ⊆ A^c.
+4. long
+5. long
+6. long
+
+## 2.2 (Q3)
+
+2^K
+
+## 2.2 (Q4)
+
+1. The empty set
+2. long
+
+## 2.2 (Q5)
+
+1. 1-1A
+2. Ω = A ∪ A^c
+3. long
+
+## 2.2 (Q6)
+
+long
+
+# 3. Visualisation
+
+## 3 (Q1)
+
+```{r}
+ggplot(Hawks, aes(x=Tail, color=Species))+geom_density()+theme_bw()+xlab("Tail (mm)")+ylab("Density")
+```
+
+## 3 (Q2)
+
+```{r}
+ggplot(Hawks, aes(x=Tail, y=Species, fill=Species))+geom_violin()+theme_bw()+xlab("Tail (mm)")+ylab("Density")
+```
+
+## 3 (Q3)
+
+```{r}
+ggplot(Hawks, aes(y=Weight,x=Tail))+xlab("Tail (mm)")+ylab("Weight (mm)")+geom_point(aes(color=Species, shape=Species))+theme_bw()
+```
+Four aesthetics: Tail length is mapped to horizontal position, Weight is mapped to vertical position, 
+Species are mapped to colour, Species are mapped to shape.
+The glyphs are the small elements (represented by the shapes) corresponding to individual cases.
+Visual cues include horizontal and vertical position, shape, colour.
+
+## 3 (Q4)
+
+```{r}
+ggplot(Hawks, aes(y=Weight,x=Tail))+xlab("Tail (mm)")+ylab("Weight (mm)")+geom_point(aes(color=Species, shape=Species))+theme_bw()+facet_wrap(~Species, scales='free')+geom_smooth(method = 'lm')
+```
+Visual cues include the horizontal and vertical positions, colour, shape, direction.
+Based on this sample, longer tail lengths appear to be predictive of larger weights within each species.
+
+## 3 (Q5)
+
+```{r}
+max_weight<-max(Hawks$Weight, na.rm=TRUE)
+max_weight_row = head(Hawks %>% filter(Weight>=max_weight), 1)
+max_weight_tail = max_weight_row$Tail
+
+ggplot(Hawks, aes(y=Weight,x=Tail))+xlab("Tail (mm)")+ylab("Weight (mm)")+geom_point(aes(color=Species, shape=Species))+theme_bw()+geom_curve(x=max_weight_tail,xend=max_weight_tail,y=max_weight-200,yend=max_weight,
+arrow=arrow(length=unit(0.1,"cm")), color="black")+
+geom_text(x=max_weight_tail,y=max_weight-200,label='heaviest hawk',size=3,color="black")
+```
