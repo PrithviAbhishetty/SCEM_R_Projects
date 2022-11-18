@@ -1,0 +1,146 @@
+---
+title: "Assignment 4"
+author: "Prithvi Abhishetty"
+date: "2022-11-18"
+output: html_document # you can change to other output format if you want
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# 1. Probability theory
+....
+
+# 2. Finite probability spaces
+
+## 2.1 (Q1)
+
+$\binom{22}{z} \left(\frac{3}{10} \right)^z \cdot \left(\frac{7}{10}\right)^{22-z}$
+
+## 2.1 (Q2)
+
+```{r}
+num_red_balls <- 3
+num_blue_balls <- 7
+total_draws <- 22
+prob_red_spheres <- function(z){
+  total_balls <- num_red_balls + num_blue_balls
+  prob <- choose(total_draws,z) * (num_red_balls/total_balls)^z * (num_blue_balls/total_balls)^{total_draws-z}
+  return(prob)
+}
+
+prob_red_spheres(10)
+```
+## 2.1 (Q3)
+
+```{r}
+num_reds=seq(22)
+prob_by_num_reds <- data.frame(num_reds, prob=prob_red_spheres(num_reds))
+
+prob_by_num_reds %>% head(3)
+```
+
+## 2.1 (Q4)
+
+```{r}
+ggplot(prob_by_num_reds, aes(x=num_reds, y=prob)) + geom_line() + xlab('Number of reds') + ylab('Probability') + theme_bw()
+```
+
+## 2.1 (Q5)
+
+```{r}
+sample(10, 22, replace=TRUE)
+
+## Setting the random seed just once
+set.seed(0)
+for(i in 1:5){
+print(sample(100,5,replace=FALSE))
+# The result may well differ every time
+}
+## Resetting the random seed every time
+for(i in 1:5){
+set.seed(1)
+print(sample(100,5,replace=FALSE))
+# The result should not change
+}
+```
+```{r}
+num_trials<-1000 # set the number of trials
+set.seed(0) # set the random seed
+sampling_with_replacement_simulation<-data.frame(trial=1:num_trials) %>%
+mutate(sample_balls = map(.x=trial, ~sample(10,22, replace = TRUE)))
+# generate collection of num_trials simulations
+
+sampling_with_replacement_simulation <- sampling_with_replacement_simulation %>%
+mutate(num_reds = map_dbl( .x=sample_balls, ~ sum(.x<=3) ) )
+```
+
+
+## 2.1 (Q6)
+
+```{r}
+num_reds_in_simulation<-sampling_with_replacement_simulation %>%
+pull(num_reds)
+
+# we extract a vector corresponding to the number of reds in each trial
+prob_by_num_reds<-prob_by_num_reds %>%
+mutate(predicted_prob=map_dbl(.x=num_reds,~sum(num_reds_in_simulation==.x))/num_trials)
+# add a column which gives the number of trials with a given number of reds
+```
+## 2.1 (Q7)
+
+```{r}
+prob_by_num_reds %>%
+rename(TheoreticalProbability=prob, EstimatedProbability=predicted_prob) %>%
+pivot_longer(cols=c("EstimatedProbability","TheoreticalProbability"),
+names_to="Type",values_to="count") %>%
+ggplot(aes(num_reds,count)) +
+geom_line(aes(linetype=Type, color=Type)) + geom_point(aes(color=Type)) +
+scale_linetype_manual(values = c("solid", "dashed"))+
+theme_bw() + xlab("Number of reds") + ylab("Probabilities")
+```
+
+
+## 2.2 (Q1)
+
+```{r}
+# Step 1
+set.seed(0) # set the random seed
+# Step 2
+num_trials <- 1000 # set the number of trials
+sample_size <- 10
+# Step 3
+sampling_without_replacement_simulation <- data.frame(trial=1:num_trials) %>%
+mutate(sample_balls=map(.x=trial,~sample(100,sample_size,replace = FALSE)))
+# generate collection of num_trials simulations
+
+# Step 4
+sampling_without_replacement_simulation <- sampling_without_replacement_simulation %>%
+mutate(num_reds=map_dbl(.x=sample_balls, ~sum((.x<=50))),
+num_blues=map_dbl(.x=sample_balls, ~sum((.x>50)*(.x<=80))),
+num_greens=map_dbl(.x=sample_balls, ~sum((.x>80))),
+)
+
+# Step 5
+sampling_without_replacement_simulation <- sampling_without_replacement_simulation %>%
+mutate(mun_minimum=pmin(num_reds, num_blues, num_greens))
+# Step 6
+proportion_zero = mean(sampling_without_replacement_simulation$mun_minimum==0)
+print(proportion_zero)
+
+```
+## 2.2 (Q2)
+
+```{r}
+num1 <- choose(50,10) + choose(70,10) + choose(80,10) -
+choose(20,10) - choose(30,10) - choose(50,10)
+num2 <- choose(100,10)
+probs_A <- num1/num2
+print(probs_A)
+```
+
+
+
+
